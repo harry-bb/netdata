@@ -14,7 +14,7 @@ RUN apt-get update && \
 
 # Install netdata
     cd /root && \
-    git clone https://github.com/firehol/netdata --depth=1 && \
+    git clone https://github.com/firehol/netdata -b v1.6.0 && \
     cd netdata && \
     ./netdata-installer.sh --dont-wait --dont-start-it && \
     cd .. && \
