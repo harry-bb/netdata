@@ -1,31 +1,31 @@
-# netdata dockerfile by MO
-#
-# VERSION 17.06
-FROM debian:jessie-slim 
+FROM alpine
 MAINTAINER MO
 
-# Setup apt
-ENV DEBIAN_FRONTEND noninteractive
+# Install packages
+RUN apk -U upgrade && \
 
-# Install dependencies and packages
-RUN apt-get update && \
-    apt-get -y upgrade  && \
-    apt-get -y install netcat-openbsd lm-sensors python python-mysqldb python-yaml curl jq nodejs zlib1g-dev uuid-dev libmnl-dev gcc make git autoconf autoconf-archive autogen automake pkg-config && \
+### Netdata full
+#    apk add alpine-sdk autoconf automake bash curl gawk gcc iw jq libmnl-dev libuuid linux-headers lm_sensors make musl-dev netcat-openbsd nodejs util-linux-dev pkgconf python py-mysqldb py-psycopg2 py-requests py-yaml zlib-dev && \
+### Netdata minimal    
+    apk add alpine-sdk autoconf automake bash curl gawk gcc iw jq libmnl-dev libuuid linux-headers make musl-dev netcat-openbsd util-linux-dev pkgconf python py-requests py-yaml zlib-dev && \
 
 # Install netdata
     cd /root && \
-    git clone https://github.com/firehol/netdata -b v1.6.0 && \
+    git clone https://github.com/firehol/netdata && \
     cd netdata && \
     ./netdata-installer.sh --dont-wait --dont-start-it && \
-    cd .. && \
-    rm -rf netdata && \
+    sed -i s/egrep/grep/ /usr/libexec/netdata/plugins.d/cgroup-name.sh && \
+    sed -i "s/# host: '127.0.0.1'/host: 'elasticsearch'/" /etc/netdata/python.d/elasticsearch.conf && \
+    cd / && \
 
 # Clean up
-    apt-get purge -y make gcc zlib1g-dev uuid-dev libmnl-dev git autoconf autogen automake pkg-config && \
-    apt-get -y autoremove && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apk del alpine-sdk autoconf automake gcc libmnl-dev linux-headers make musl-dev pkgconf util-linux-dev zlib-dev && \
+    rm -rf /root/* && \
+    rm -rf /var/cache/apk/*
+
+# Healthcheck
+HEALTHCHECK --retries=10 CMD curl -s -XGET 'http://127.0.0.1:19999'
 
 # Start netdata 
 WORKDIR /
-CMD ["/usr/sbin/netdata","-D","-s","/host","-i","127.0.0.1","-p","64301"]
+CMD ["/usr/sbin/netdata","-D","-s","/host","-p","19999"]
