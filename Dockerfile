@@ -15,6 +15,7 @@ RUN apk -U upgrade && \
     sed -i "s/# port: '9200'/port: '64298'/" /etc/netdata/python.d/elasticsearch.conf && \
     sed -i "s/# cluster_health: True/cluster_health: True/" /etc/netdata/python.d/elasticsearch.conf && \
     sed -i "s/# cluster_stats: True/cluster_stats: True/" /etc/netdata/python.d/elasticsearch.conf && \
+    sed -i 's/SEND_EMAIL="YES"/SEND_EMAIL="NO"/' /etc/netdata/health_alarm_notify.conf && \
     cd / && \
 
 # Clean up
